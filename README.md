@@ -6,7 +6,7 @@
 
 ## Real-world Prometheus Deployment: A Practical Guide for Kubernetes Monitoring
 
-### Source link: https://harshhaa.hashnode.dev/real-world-prometheus-deployment-a-practical-guide-for-kubernetes-monitoring
+### Source link: https://blog.prodevopsguy.xyz/real-world-prometheus-deployment-a-practical-guide-for-kubernetes-monitoring
 
 # Thank you
 Thank you for taking the time to work on this tutorial/labs. Let me know what you thought!
