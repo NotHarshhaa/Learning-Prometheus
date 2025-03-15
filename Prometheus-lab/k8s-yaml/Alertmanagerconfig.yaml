@@ -3,17 +3,38 @@ kind: AlertmanagerConfig
 metadata:
   name: alertmanager-config
   labels:
-    release: prometheus # Label for release association
+    release: prometheus # Ensures correct association with Prometheus instance
 spec:
   route:
-    groupBy: ["severity"] # Group alerts by severity
-    groupWait: 30s # Time to wait for additional alerts before dispatching a group
-    groupInterval: 5m # Interval at which the grouped alerts are sent
-    repeatInterval: 12h # Interval at which to resend notifications for the same alert
-    receiver: "team-notifications" # Default receiver for unmatched alerts
+    groupBy: ["alertname", "severity"] # Group alerts by alert name and severity level
+    groupWait: 30s # Wait time before sending grouped alerts
+    groupInterval: 5m # Interval between alert groups
+    repeatInterval: 12h # Frequency of repeated alerts for unresolved issues
+    receiver: "default-receiver" # Default receiver for alerts
 
   receivers:
-    - name: "team-notifications" # Name of the receiver
+    - name: "email-team" # Email notification configuration
       emailConfigs:
-        - to: "team@example.com" # Email address to which notifications are sent
-          sendResolved: true # Whether to send notifications when alerts are resolved
+        - to: "team@example.com" # Replace with actual team email
+          from: "alerts@yourdomain.com" # Replace with your email sender
+          smarthost: "smtp.yourmail.com:587" # Replace with SMTP server
+          authUsername: "your-username"
+          authPassword:
+            name: email-secret
+            key: password
+          sendResolved: true # Send notifications when issues are resolved
+
+    - name: "slack-notifications" # Slack notification configuration
+      slackConfigs:
+        - channel: "#alerts" # Replace with Slack channel name
+          apiURL:
+            name: slack-secret
+            key: webhook-url
+          sendResolved: true
+          title: "{{ .CommonAnnotations.summary }}"
+          text: "{{ .CommonAnnotations.description }}"
+
+    - name: "webhook-receiver" # Webhook integration (e.g., PagerDuty, custom APIs)
+      webhookConfigs:
+        - url: "https://your-webhook-url.com/alert"
+          sendResolved: true

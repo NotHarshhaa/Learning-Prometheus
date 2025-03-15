@@ -1,15 +1,65 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: api-service-monitor # Name of the ServiceMonitor
+  name: api-service-monitor
   labels:
-    release: prometheus # Label for release association
-    app: prometheus # Label for identifying the application type
+    release: prometheus # Ensures association with Prometheus
+    app: prometheus
+    team: backend # Assigns the monitor to a specific team
 spec:
-  jobLabel: job # Label to identify the job for Prometheus
+  jobLabel: api-monitor # More descriptive job label
   selector:
     matchLabels:
-      app: api # Match labels to select pods for monitoring
+      app: api # Matches the app label for monitoring
+  namespaceSelector:
+    matchNames:
+      - default # Ensures the correct namespace is targeted (modify as needed)
   endpoints:
-    - port: web # Port on which the service exposes metrics
-      path: /swagger-stats/metrics # Path to scrape metrics from
+    - port: web # Monitored port
+      path: /swagger-stats/metrics # Path where Prometheus scrapes metrics
+      interval: 15s # Scrape interval (adjust based on load)
+      scrapeTimeout: 10s # Timeout for scraping metrics
+      honorLabels: true # Preserves metric labels from the application
+      relabelings: # Modifies metric labels dynamically
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        - sourceLabels: [__meta_kubernetes_namespace]
+          targetLabel: namespace
+        - sourceLabels: [__meta_kubernetes_pod_name]
+          targetLabel: pod
+        - sourceLabels: [__meta_kubernetes_pod_container_name]
+          targetLabel: container
+        - sourceLabels: [__meta_kubernetes_pod_label_app]
+          targetLabel: app
+        - sourceLabels: [__meta_kubernetes_pod_label_release]
+          targetLabel: release
+        - sourceLabels: [__meta_kubernetes_pod_label_team]
+          targetLabel: team
+        - sourceLabels: [__meta_kubernetes_pod_label_version]
+          targetLabel: version
+        - sourceLabels: [__meta_kubernetes_pod_label_component]
+          targetLabel: component
+        - sourceLabels: [__meta_kubernetes_pod_label_managed_by]
+          targetLabel: managed_by
+        - sourceLabels: [__meta_kubernetes_pod_label_created_by]
+          targetLabel: created_by
+        - sourceLabels: [__meta_kubernetes_pod_label_deployment]
+          targetLabel: deployment
+        - sourceLabels: [__meta_kubernetes_pod_label_service]
+          targetLabel: service
+        - sourceLabels: [__meta_kubernetes_pod_label_environment]
+          targetLabel: environment
+        - sourceLabels: [__meta_kubernetes_pod_label_tier]
+          targetLabel: tier
+        - sourceLabels: [__meta_kubernetes_pod_label_partition]
+          targetLabel: partition
+        - sourceLabels: [__meta_kubernetes_pod_label_track]
+          targetLabel: track
+        - sourceLabels: [__meta_kubernetes_pod_label_role]
+          targetLabel: role
+        - sourceLabels: [__meta_kubernetes_pod_label_zone]  
+          targetLabel: zone
+        - sourceLabels: [__meta_kubernetes_pod_label_region]
+          targetLabel: region
+        - sourceLabels: [__meta_kubernetes_pod_label_cluster]
+          targetLabel: cluster

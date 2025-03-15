@@ -6,12 +6,48 @@ metadata:
     release: prometheus # Label for release association
 spec:
   groups:
-    - name: api # Name of the rule group
+    - name: api-alerts # Improved naming convention for clarity
       rules:
-        - alert: down # Alert name
-          expr: up == 0 # Expression to trigger the alert when 'up' is equal to 0
-          for: 0m # Minimum duration for which the alert condition must be true to trigger the alert
+        # Alert for when the target instance is down
+        - alert: InstanceDown
+          expr: up == 0
+          for: 1m # Alert only triggers if the instance is down for 1 minute
           labels:
-            severity: Critical # Label indicating the severity of the alert
+            severity: critical
+            team: backend
           annotations:
-            summary: Prometheus target missing {{$labels.instance}}
+            summary: "Instance {{ $labels.instance }} is down"
+            description: "Prometheus target instance {{ $labels.instance }} has been unreachable for over 1 minute."
+
+        # Alert for high CPU usage (above 80% for 5 minutes)
+        - alert: HighCPUUsage
+          expr: (100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+          for: 5m
+          labels:
+            severity: warning
+            team: backend
+          annotations:
+            summary: "High CPU Usage on {{ $labels.instance }}"
+            description: "CPU usage on instance {{ $labels.instance }} has been above 80% for the last 5 minutes."
+
+        # Alert for low memory availability (less than 10% free for 5 minutes)
+        - alert: LowMemory
+          expr: (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100 < 10
+          for: 5m
+          labels:
+            severity: warning
+            team: backend
+          annotations:
+            summary: "Low Available Memory on {{ $labels.instance }}"
+            description: "Available memory on instance {{ $labels.instance }} is below 10% for over 5 minutes."
+
+        # Alert for high disk usage (above 90% for 10 minutes)
+        - alert: HighDiskUsage
+          expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+          for: 10m
+          labels:
+            severity: critical
+            team: backend
+          annotations:
+            summary: "High Disk Usage on {{ $labels.instance }}"
+            description: "Disk usage on instance {{ $labels.instance }} has exceeded 90% for the last 10 minutes."
